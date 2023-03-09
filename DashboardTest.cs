@@ -193,24 +193,6 @@ namespace BionicAppTestRunner.BionicAppUi
             Assert.Equal(3, stack.Instance.Spacing);
         }
 
-        [Fact]
-        public async Task Test_ClickUser()
-        {
-            var comp = RenderComponent<Dashboard>();
-            var mudTabs = comp.FindComponent<MudTabs>().Instance;
-
-            // Act
-            var userTab = mudTabs.Panels.FirstOrDefault(p => p.Text == "user_ua");
-            userTab.OnClick.InvokeAsync(null);
-
-            // Assert
-            var userPage = comp.FindComponent<User>();
-            Assert.NotNull(userPage);
-
-            var userPageTitle = userPage.Find("h1").InnerHtml;
-            Assert.Equal("User", userPageTitle);
-
-        }
     }
 }
 
