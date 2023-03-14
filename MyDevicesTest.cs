@@ -1,10 +1,12 @@
-﻿using BionicApp.Pages.Add_Device.My_Devices;
+using AngleSharp.Common;
+using BionicApp.Pages.Add_Device.My_Devices;
 using Bunit;
 using MudBlazor;
 using Ossur.Bionics.Common;
 using System.Globalization;
 using Xunit;
 using static MudBlazor.CategoryTypes;
+using Color = MudBlazor.Color;
 
 namespace BionicAppTestRunner.BionicAppUi
 {
@@ -140,6 +142,7 @@ namespace BionicAppTestRunner.BionicAppUi
             var comp = RenderComponent<MyDevices>();
             var exp = comp.FindComponent<MudExpansionPanel>();
             var ms = exp.FindComponents<MudStack>()[3];
+
             Assert.NotNull(ms);
             Assert.Equal(1, ms.Instance.Spacing);
             Assert.True(ms.Instance.Row);
@@ -178,6 +181,123 @@ namespace BionicAppTestRunner.BionicAppUi
             Assert.Equal(Typo.caption, mudText.Instance.Typo);
             mudText.MarkupMatches("<span class=\"mud-typography mud-typography-caption\">0%</span>");
         }
+
+        [Fact]
+        public void Test_mudDividerproperties()
+        {
+            mydevicemethod();
+            var comp = RenderComponent<MyDevices>();
+            var exp = comp.FindComponent<MudExpansionPanel>();
+            var div = exp.FindComponents<MudDivider>()[1];
+
+            Assert.NotNull(div);
+            Assert.True(div.Instance.FlexItem);
+            Assert.True(div.Instance.Vertical);
+        }
+
+        [Fact]
+        public void MudStack4()
+        {
+            mydevicemethod();
+            var comp = RenderComponent<MyDevices>();
+            var exp = comp.FindComponent<MudExpansionPanel>();
+            var ms = exp.FindComponents<MudStack>()[4];
+
+            Assert.NotNull(ms);
+            Assert.Equal(0, ms.Instance.Spacing);
+            Assert.True(ms.Instance.Row);
+            Assert.Equal(Justify.SpaceAround, ms.Instance.Justify);
+            Assert.Equal(AlignItems.Center, ms.Instance.AlignItems);
+        }
+
+        [Fact]
+        public void MudIcon_Walk()
+        {
+            mydevicemethod();
+            var comp = RenderComponent<MyDevices>();
+            var exp = comp.FindComponent<MudExpansionPanel>();
+            var icon = exp.FindComponents<MudIcon>()[0];
+
+            Assert.NotNull(icon);
+            Assert.Equal("width:15px;height:20px;", icon.Instance.Style);
+            Assert.Equal(Icons.Material.Filled.DirectionsWalk, icon.Instance.Icon);
+        }
+
+        [Fact]
+        public void StepCount_Text()
+        {
+            mydevicemethod();
+            var comp = RenderComponent<MyDevices>();
+            var exp = comp.FindComponent<MudExpansionPanel>();
+            var mudText = exp.FindComponents<MudText>()[3];
+
+            Assert.NotNull(mudText);
+            mudText.MarkupMatches("<span class=\"mud-typography mud-typography-caption\">0</span>");
+            Assert.Equal(Typo.caption, mudText.Instance.Typo);
+
+        }
+
+        [Fact]
+        public void Test_MudIconButton()
+        {
+            mydevicemethod();
+            var comp = RenderComponent<MyDevices>();
+            var exp = comp.FindComponent<MudExpansionPanel>();
+            var button = exp.FindComponent<MudIconButton>();
+
+            Assert.NotNull(button);
+            Assert.Equal("ml-6", button.Instance.Class);
+            Assert.True(button.Instance.Disabled);
+
+        }
+
+        [Fact]
+        public void AddDeviceButton_Properties()
+        {
+            var comp = RenderComponent<MyDevices>();
+            var button = comp.FindComponent<MudButton>();
+
+            Assert.NotNull(button);
+            Assert.Equal(Variant.Filled, button.Instance.Variant);
+            Assert.Equal(Color.Primary, button.Instance.Color);
+            Assert.Equal("ml-auto", button.Instance.Class);
+            Assert.True(button.Instance.FullWidth);
+            Assert.Equal("height:50px; position:absolute;bottom:0px; text-transform:none;", button.Instance.Style);
+            button.MarkupMatches("<button blazor:onclick=\"1\" type=\"button\" class=\"mud-button-root mud-button mud-button-filled mud-button-filled-primary mud-button-filled-size-medium mud-width-full mud-ripple ml-auto\" style=\"height:50px; position:absolute;bottom:0px; text-transform:none;\" blazor:onclick:stopPropagation blazor:elementReference=\"\"><span class=\"mud-button-label\">add_device_ua</span></button>");
+        }
+
+        [Fact]
+        public void Test_MudPaper()
+        {
+            mydevicemethod();
+            var comp = RenderComponent<MyDevices>();
+            var exp = comp.FindComponent<MudExpansionPanel>();
+            var paper = exp.FindComponents<MudPaper>()[0];
+
+            Assert.NotNull(paper);
+            Assert.Equal("d-flex flex-row flex-wrap justify-center flex-grow-1 gap-4", paper.Instance.Class);
+            Assert.Equal(0, paper.Instance.Elevation);
+        }
+
+        [Fact]
+        public void Testing_tabviews()
+        {
+            var comp = RenderComponent<MyDevices>();
+            
+            var expnls = comp.FindComponent<MudExpansionPanels>();
+            mydevicemethod();
+
+            var exp = expnls.FindAll("mud-expand-panel mud-panel-expanded mud-elevation-1 mud-expand-panel-border ma-0 pa-0");
+
+            expnls.Instance.ExpandAll();
+
+            //Assert.Equal(6, comp.Instance.tabViewOptions.Count);
+
+
+
+        }
+
+
 
 
 
