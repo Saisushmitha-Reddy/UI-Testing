@@ -1,12 +1,17 @@
-using AngleSharp.Common;
+using BionicApp.Data;
+using BionicApp.Pages.Add_Device;
+using BionicApp.Pages.Add_Device.App_Info;
 using BionicApp.Pages.Add_Device.My_Devices;
+using BionicApp.Pages.Add_Device.My_Devices.DeviceProfiles;
+using BionicApp.Pages.Add_Device.My_Devices.DeviceSettings;
 using Bunit;
 using MudBlazor;
 using Ossur.Bionics.Common;
 using System.Globalization;
+using System.Reflection;
 using Xunit;
-using static MudBlazor.CategoryTypes;
 using Color = MudBlazor.Color;
+using Size = MudBlazor.Size;
 
 namespace BionicAppTestRunner.BionicAppUi
 {
@@ -280,27 +285,159 @@ namespace BionicAppTestRunner.BionicAppUi
         }
 
         [Fact]
-        public void Testing_tabviews()
+        public void Check_TabsCount()
         {
             var comp = RenderComponent<MyDevices>();
-            
-            var expnls = comp.FindComponent<MudExpansionPanels>();
+            mydevicemethod();
+            //var expectedTabViews = new List<TabView>();
+
+            var tabViewOptionsProp = comp.Instance.GetType().GetField("tabViewOptions", BindingFlags.NonPublic | BindingFlags.Instance);
+            var tabViewOptions = (List<TabView>)tabViewOptionsProp.GetValue(comp.Instance);
+
+            Assert.Equal(6, tabViewOptions.Count);
+        }
+
+        [Fact]
+        public void Check_TabNames()
+        {
+            var comp = RenderComponent<MyDevices>();
             mydevicemethod();
 
-            var exp = expnls.FindAll("mud-expand-panel mud-panel-expanded mud-elevation-1 mud-expand-panel-border ma-0 pa-0");
+            var tabViewOptionsProp = comp.Instance.GetType().GetField("tabViewOptions", BindingFlags.NonPublic | BindingFlags.Instance);
+            var tabViewOptions = (List<TabView>)tabViewOptionsProp.GetValue(comp.Instance);
 
-            expnls.Instance.ExpandAll();
-
-            //Assert.Equal(6, comp.Instance.tabViewOptions.Count);
-
-
+            Assert.Equal("settings_ua", tabViewOptions[0].Name);
+            Assert.Equal("profiles_ua", tabViewOptions[1].Name);
+            Assert.Equal("exercises_ua", tabViewOptions[2].Name);
+            Assert.Equal("stepcount_ua", tabViewOptions[3].Name);
+            Assert.Equal("reports_ua", tabViewOptions[4].Name);
+            Assert.Equal("device_ifu_ua", tabViewOptions[5].Name);
 
         }
 
+        [Fact]
+        public void Test_SettingsTab()
+        {
+            var comp = RenderComponent<MyDevices>();
+            mydevicemethod();
 
+            var tabViewOptionsProp = comp.Instance.GetType().GetField("tabViewOptions", BindingFlags.NonPublic | BindingFlags.Instance);
+            var tabViewOptions = (List<TabView>)tabViewOptionsProp.GetValue(comp.Instance);
 
+            Assert.Equal("settings_ua", tabViewOptions[0].Name);
+            Assert.Equal(Icons.Material.Filled.Person, tabViewOptions[0].Icon);
+            Assert.Equal(Icons.Material.Filled.Settings, tabViewOptions[0].ImageURL);
+            Assert.Equal(typeof(Settings), tabViewOptions[0].TabType);
+        }
 
+        [Fact]
+        public void Test_ProfilesTab()
+        {
+            var comp = RenderComponent<MyDevices>();
+            mydevicemethod();
 
+            var tabViewOptionsProp = comp.Instance.GetType().GetField("tabViewOptions", BindingFlags.NonPublic | BindingFlags.Instance);
+            var tabViewOptions = (List<TabView>)tabViewOptionsProp.GetValue(comp.Instance);
+
+            Assert.Equal("profiles_ua", tabViewOptions[1].Name);
+            Assert.Equal(Icons.Material.Filled.FormatListBulleted, tabViewOptions[1].Icon);
+            Assert.Equal(Icons.Material.Filled.ManageAccounts, tabViewOptions[1].ImageURL);
+            Assert.Equal(typeof(Profiles), tabViewOptions[1].TabType);
+        }
+
+        [Fact]
+        public void Test_ExercisesTab()
+        {
+            var comp = RenderComponent<MyDevices>();
+            mydevicemethod();
+
+            var tabViewOptionsProp = comp.Instance.GetType().GetField("tabViewOptions", BindingFlags.NonPublic | BindingFlags.Instance);
+            var tabViewOptions = (List<TabView>)tabViewOptionsProp.GetValue(comp.Instance);
+
+            Assert.Equal("exercises_ua", tabViewOptions[2].Name);
+            Assert.Equal(Icons.Material.Filled.Info, tabViewOptions[2].Icon);
+            Assert.Equal(Icons.Material.Filled.FitnessCenter, tabViewOptions[2].ImageURL);
+            Assert.Equal(typeof(Info), tabViewOptions[2].TabType);
+        }
+
+        [Fact]
+        public void Test_StepCountTab()
+        {
+            var comp = RenderComponent<MyDevices>();
+            mydevicemethod();
+
+            var tabViewOptionsProp = comp.Instance.GetType().GetField("tabViewOptions", BindingFlags.NonPublic | BindingFlags.Instance);
+            var tabViewOptions = (List<TabView>)tabViewOptionsProp.GetValue(comp.Instance);
+
+            Assert.Equal("stepcount_ua", tabViewOptions[3].Name);
+            Assert.Equal(Icons.Material.Filled.Person, tabViewOptions[3].Icon);
+            Assert.Equal(Icons.Material.Filled.DirectionsWalk, tabViewOptions[3].ImageURL);
+            Assert.Equal(typeof(StepCount), tabViewOptions[3].TabType);
+        }
+
+        [Fact]
+        public void Test_ReportsTab()
+        {
+            var comp = RenderComponent<MyDevices>();
+            mydevicemethod();
+
+            var tabViewOptionsProp = comp.Instance.GetType().GetField("tabViewOptions", BindingFlags.NonPublic | BindingFlags.Instance);
+            var tabViewOptions = (List<TabView>)tabViewOptionsProp.GetValue(comp.Instance);
+
+            Assert.Equal("reports_ua", tabViewOptions[4].Name);
+            Assert.Equal(Icons.Material.Filled.Person, tabViewOptions[4].Icon);
+            Assert.Equal(Icons.Material.Filled.Summarize, tabViewOptions[4].ImageURL);
+            Assert.Equal(typeof(Reports), tabViewOptions[4].TabType);
+        }
+
+        [Fact]
+        public void Test_DeviceIFUTab()
+        {
+            var comp = RenderComponent<MyDevices>();
+            mydevicemethod();
+
+            var tabViewOptionsProp = comp.Instance.GetType().GetField("tabViewOptions", BindingFlags.NonPublic | BindingFlags.Instance);
+            var tabViewOptions = (List<TabView>)tabViewOptionsProp.GetValue(comp.Instance);
+
+            Assert.Equal("device_ifu_ua", tabViewOptions[5].Name);
+            Assert.Equal(Icons.Material.Filled.Person, tabViewOptions[5].Icon);
+            Assert.Equal(Icons.Material.Filled.HelpCenter, tabViewOptions[5].ImageURL);
+            Assert.Equal(typeof(User), tabViewOptions[5].TabType);
+        }
+
+        [Fact]
+        public void Test_TabPaper()
+        {
+            mydevicemethod();
+
+            var comp = RenderComponent<MyDevices>();
+
+            var exp = comp.FindComponent<MudExpansionPanel>();
+
+            //var tabViewOptionsProp = comp.Instance.GetType().GetField("tabViewOptions", BindingFlags.NonPublic | BindingFlags.Instance);
+            //var tabViewOptions = (List<TabView>)tabViewOptionsProp.GetValue(comp.Instance);
+
+            var paper = exp.FindComponents<MudPaper>()[1];
+
+            Assert.NotNull(paper);
+            Assert.Equal("justify-center align-content-center pa-4", paper.Instance.Class);
+            Assert.Equal(1, paper.Instance.Elevation);
+            Assert.Equal("200px", paper.Instance.Width);
+            Assert.Equal("200px", paper.Instance.Height);
+        }
+
+        [Fact]
+        public void Test_TabIconProperties()
+        {
+            mydevicemethod();
+            var comp = RenderComponent<MyDevices>();
+            var exp = comp.FindComponent<MudExpansionPanel>();
+            var icon = exp.FindComponents<MudIcon>()[1];
+
+            Assert.NotNull(icon);
+            Assert.Equal("mud-expand-panel-icon mud-transform", icon.Instance.Class);
+            Assert.Equal(Size.Medium, icon.Instance.Size);
+        }
 
     }
 
