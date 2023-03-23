@@ -1,12 +1,17 @@
 using BionicApp.Components;
+using BionicApp.Data;
+using BionicApp.Pages.Add_Device.Steps;
 using BionicApp.Pages.Authentication;
 using Bunit;
-using Microsoft.AspNetCore.Components;
 using MudBlazor;
+using Ossur.Bionics.Common;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using Xunit;
+using Color = MudBlazor.Color;
 using Size = MudBlazor.Size;
+using Typo = MudBlazor.Typo;
 
 namespace BionicAppTestRunner.BionicAppUi
 {
@@ -16,8 +21,10 @@ namespace BionicAppTestRunner.BionicAppUi
         [Fact]
         public void EmailField_IsDisplayed_AndIsRequired()
         {
+            Manager.Instance.Logout();
+
             var component = RenderComponent<Authentication>();
-            var emailField = component.FindComponent<MudTextField<string>>();
+            var emailField = component.FindComponents<MudTextField<string>>()[0];
             Assert.NotNull(emailField);
             Assert.Equal("Email", emailField.Instance.Label);
             Assert.True(emailField.Instance.Required);
@@ -26,29 +33,31 @@ namespace BionicAppTestRunner.BionicAppUi
         }
 
         [Fact]
-        public void PasswordField_Tests()
+        public void Passwd_FieldProp()
         {
-            var passwordField = RenderComponent<MudTextField<string>>(p =>
-                p.Add(x => x.Label, "Password")
-                 .Add(x => x.Required, true)
-                 .Add(x => x.Adornment, Adornment.End)
-                 .Add(x => x.Immediate, true)
-                 .Add(x => x.AdornmentAriaLabel, "Show Password")
-            );
-            //passwordField.Instance.Value = "invalid-password";
-            Assert.NotNull(passwordField);
-            Assert.Equal("Password", passwordField.Instance.Label);
-            Assert.True(passwordField.Instance.Required);
-            Assert.Equal("Show Password", passwordField.Instance.AdornmentAriaLabel);
+            Manager.Instance.Logout();
+            var comp = RenderComponent<Authentication>();
+            var pwd = comp.FindComponents<MudTextField<string>>()[1];
+
+            Assert.NotNull(pwd);
+            Assert.Equal("Password", pwd.Instance.Label);
+            Assert.Equal(Variant.Text, pwd.Instance.Variant);
+            Assert.Equal("Password is required!", pwd.Instance.RequiredError);
+            Assert.True(pwd.Instance.Required);
+            Assert.Equal(Adornment.End, pwd.Instance.Adornment);
+            Assert.Equal("Show Password", pwd.Instance.AdornmentAriaLabel);
+            Assert.True(pwd.Instance.Immediate);
 
         }
 
         [Fact]
         public void AllFieldsAndButtons_AreDisplayed()
         {
+            Manager.Instance.Logout();
+
             var component = RenderComponent<Authentication>();
-            var emailField = component.FindComponent<MudTextField<string>>();
-            var passwordField = component.FindComponent<MudTextField<string>>();
+            var emailField = component.FindComponents<MudTextField<string>>()[0];
+            var passwordField = component.FindComponents<MudTextField<string>>()[1];
             var signInButton = component.FindAll("button").FirstOrDefault(b => b.TextContent == "Sign in");
             var signInWithFacebookButton = component.FindAll("button").FirstOrDefault(b => b.TextContent == "Sign in with facebook");
             Assert.NotNull(emailField);
@@ -77,11 +86,14 @@ namespace BionicAppTestRunner.BionicAppUi
         {
             var passwordField = RenderComponent<MudTextField<string>>(p =>
                 p.Add(x => x.Label, "Password")
+
                 .Add(x => x.InputType, InputType.Password)
-                .Add(x => x.Value, "password")
+            //.Add(x => x.Value, "password")
             );
             var inputElement = passwordField.Find("input");
             Assert.Equal(InputType.Password.ToString().ToLower(), inputElement.GetAttribute("type"));
+            //Assert.Equal(InputType.Password.ToString(), inputElement.GetAttribute("type")); - will not check for case-insensitive
+
         }
 
 
@@ -117,12 +129,12 @@ namespace BionicAppTestRunner.BionicAppUi
         [Fact]
         public void Pswd_DisplayedCrctLabel_Required()
         {
-            var passwordField = RenderComponent<MudTextField<string>>(p =>
-                p.Add(x => x.Label, "Password")
-                 .Add(x => x.Required, true)
-                 .Add(x => x.RequiredError, "Password is required!"));
+            Manager.Instance.Logout();
+            var comp = RenderComponent<Authentication>();
+            var passwordField = comp.FindComponents<MudTextField<string>>()[1];
 
             var labelElement = passwordField.Find("label");
+            //var labelElement = passwordField.FindAll(".mud-input-label");
             var inputElement = passwordField.Find("input");
             Assert.NotNull(labelElement);
             Assert.NotNull(inputElement);
@@ -135,12 +147,10 @@ namespace BionicAppTestRunner.BionicAppUi
         [Fact]
         public void PasswordField_ShouldShowError_WhenLeftEmpty()
         {
-            // Arrange
-            var passwordField = RenderComponent<MudTextField<string>>(p => p
-                .Add(x => x.Label, "Password")
-                .Add(x => x.Required, true)
-                .Add(x => x.RequiredError, "Password is required!")
-            );
+            Manager.Instance.Logout();
+
+            var comp = RenderComponent<Authentication>();
+            var passwordField = comp.FindComponents<MudTextField<string>>()[1];
 
             var inputElement = passwordField.Find("input");
 
@@ -157,10 +167,10 @@ namespace BionicAppTestRunner.BionicAppUi
         [Fact]
         public void EmailField_ShowError_LeftEmpty()
         {
-            var emailField = RenderComponent<MudTextField<string>>(p => p.Add(x => x.Label, "Email")
-                            .Add(x => x.Required, true)
-                .Add(x => x.RequiredError, "Email is required!")
-            );
+            Manager.Instance.Logout();
+            var comp = RenderComponent<Authentication>();
+            var emailField = comp.FindComponents<MudTextField<string>>()[0];
+
             var inputElement = emailField.Find("input");
             inputElement.Change(string.Empty);
             inputElement.Blur();
@@ -177,64 +187,14 @@ namespace BionicAppTestRunner.BionicAppUi
         }
 
         [Fact]
-        public void EmailField_InValidFormat_ShowsError()
-        {
-            // Arrange
-            var emailField = RenderComponent<MudTextField<string>>(p =>
-                    p.Add(x => x.Label, "Email")
-                    .Add(x => x.InputType, InputType.Email)
-                    .Add(x => x.Validation, new EmailAddressAttribute())
-                    );
-            var email = InputType.Email;
-            var attribute = new EmailAddressAttribute();
-
-
-            var isValid = attribute.IsValid(email);
-
-            Assert.False(isValid);
-
-        }
-
-        //emailField.Instance.ErrorText = expectedErrorMessage;
-        //Assert.Equal(expectedErrorMessage, emailField.Instance.ErrorText);
-        //            var expectedErrorMessage = attribute.FormatErrorMessage("Email");
-        //            var attribute = new EmailAddressAttribute();
-
-        //[Fact]
-        //public void EmailField_ValidFormat_ShowsError()
-        //{
-        //    // Arrange
-        //    var expectedErrorMessage = "The email field must contain a valid email address";
-        //    var emailField = RenderComponent<MudTextField<string>>(p =>
-        //        p.Add(x => x.Label, "Email")
-        //        .Add(x => x.InputType, InputType.Email)
-        //        .Add(x => x.Validation, new Func<string, IEnumerable<string>>(value =>
-        //        {
-        //            if (!new EmailAddressAttribute().IsValid(value))
-        //            {
-        //                yield return expectedErrorMessage;
-        //            }
-        //        })));
-
-        //    // Act
-        //    emailField.Find("input").Change("invalid-email");
-
-        //    // Assert
-        //    Assert.Equal(expectedErrorMessage, emailField.Instance.ErrorText);
-        //}
-
-
-        [Fact]
         public void EmailField_ShowsError_ForInvalidEmails()
         {
-            // Arrange
-            var emailField = RenderComponent<MudTextField<string>>(p =>
-                p.Add(x => x.Label, "Email")
-                 .Add(x => x.InputType, InputType.Email)
-                 .Add(x => x.Validation, new EmailAddressAttribute())
-            );
+            Manager.Instance.Logout();
 
-            var invalidEmails = new[] { "invalid", "invalid@", "invalid.com", "@invalid.com"};
+            var comp = RenderComponent<Authentication>();
+            var emailField = comp.FindComponents<MudTextField<string>>()[0];
+
+            var invalidEmails = new[] { "invalid", "invalid@", "invalid.com", "@invalid.com" };
 
             foreach (var email in invalidEmails)
             {
@@ -271,12 +231,24 @@ namespace BionicAppTestRunner.BionicAppUi
             }
         }
 
+        public IEnumerable<string> PasswordStrength(string password)
+        {
+            if (password.Length < 8)
+                yield return "Password must be at least of length 8";
+
+            if (!Regex.IsMatch(password, @"[a-z]"))
+                yield return "Password must contain at least one lowercase letter";
+            if (!Regex.IsMatch(password, @"[0-9]"))
+                yield return "Password must contain at least one digit";
+        }
+
+
         [Fact]
         public void Test_PasswordComposition()
         {
             var passwordField = RenderComponent<MudTextField<string>>(p =>
                 p.Add(x => x.Label, "Password")
-                .Add(x => x.InputType, InputType.Password)
+               .Add(x => x.InputType, InputType.Password)
                 .Add(x => x.Validation, new Func<string, IEnumerable<string>>(PasswordStrength)));
 
             foreach (var password in new[] { "short", "1234567", "pass", "password", "Pass123" })
@@ -290,21 +262,10 @@ namespace BionicAppTestRunner.BionicAppUi
             }
         }
 
-        public IEnumerable<string> PasswordStrength(string password)
-        {
-            if (password.Length < 8)
-                yield return "Password must be at least 8 characters long";
-            if (!Regex.IsMatch(password, @"[a-z]"))
-                yield return "Password must contain at least one lowercase letter";
-            if (!Regex.IsMatch(password, @"[0-9]"))
-                yield return "Password must contain at least one digit";
-        }
-
-
-
         [Fact]
         public void SignIn_LogoProperties()
         {
+            Manager.Instance.Logout();
             var component = RenderComponent<Authentication>();
             var loginPageIcon = component.FindComponent<CustomImage>();
             Assert.NotNull(loginPageIcon);
@@ -331,6 +292,8 @@ namespace BionicAppTestRunner.BionicAppUi
         [Fact]
         public void FbButton_Text_DisplayTest()
         {
+            Manager.Instance.Logout();
+
             var component = RenderComponent<Authentication>();
             var Fbbutton = component.FindAll("button").FirstOrDefault(b => b.TextContent == "Sign in with facebook");
             Assert.NotNull(Fbbutton);
@@ -387,274 +350,6 @@ namespace BionicAppTestRunner.BionicAppUi
             Assert.True(true);
         }
 
-
-        //[Fact]
-        //public void CheckBoxTogglesState_WhenClicked()
-        //{
-        //    //// Arrange
-        //    var checkBox = RenderComponent<MudCheckBox<bool>>(p =>
-        //        p.Add(x => x.Checked, false)
-        //         .Add(x => x.CheckedChanged, (args) => { })
-        //         .Add(x => x.Color, Color.Primary)
-        //    );
-
-        //    //// Assert initial state
-        //    var input = checkBox.Find("input[type='checkbox']");
-        //    Assert.False(input.HasAttribute("checked"));
-
-        //    //// Act - click the checkbox
-        //    input.Click();
-
-        //    //// Assert updated state
-        //    Assert.True(input.HasAttribute("checked"));
-        //    //Assert.True(true);
-        //}
-
-        [Fact]
-        public void AgreeButton_IsEnabled_OnlyWhenCheckBoxIsChecked()
-        {
-            //// Arrange
-            //var component = RenderComponent<Authentication>();
-            //var input = component.FindComponent<MudCheckBox<bool>>().Find("input[type='checkbox']");
-            //var agreeButton = component.FindComponent<MudButton>().FindAll("button").First(button => button.InnerHtml.Contains("agree_ua"));
-
-            //// Assert that the "Agree" button is initially disabled
-            ////Assert.True(agreeButton.GetAttribute("disabled") == "true");
-            //Assert.True(agreeButton.IsDisabled());
-
-            //// Act: check the terms and conditions checkbox
-            //input.Change(true);
-
-            //// Assert that the "Agree" button is now enabled
-            //await component.InvokeAsync(() => { });
-            //Assert.False(agreeButton.IsDisabled());
-            ////Assert.False(agreeButton.GetAttribute("disabled") == "true");
-
-            //// Act: uncheck the terms and conditions checkbox
-            //input.Change(false);
-
-            //// Assert that the "Agree" button is now disabled again
-            //await component.InvokeAsync(() => { });
-            //Assert.True(agreeButton.IsDisabled());
-            ////Assert.True(agreeButton.GetAttribute("disabled") == "true");
-            Assert.True(true);
-        }
-
-        [Fact]
-        public async Task EulaSection_IsDisplayedCorrectly()
-        {
-            var component = RenderComponent<Authentication>();
-            await component.InvokeAsync(() => { });
-            var eulaContentElement = component.Find("div.d-flex.flex-column");
-            Assert.NotNull(eulaContentElement);
-            //var eulaContent = eulaContentElement.InnerHtml;
-
-            //var eulaCheckbox = component.FindComponent<MudCheckBox<bool>>().Find("input[type='checkbox']");
-            //Assert.NotNull(eulaCheckbox);
-
-            //var agreeButton = component.FindComponent<MudButton>().FindAll("button").First(button => button.InnerHtml.Contains("Agree"));
-
-            var comp = RenderComponent<MudButton>(parameters => parameters
-            .Add(p => p.Variant, Variant.Filled)
-            .Add(p => p.Class, "ml-auto")
-            .AddChildContent("Add a device")
-            );
-
-            var agreebutton = comp.Find(".ml-auto");
-            Assert.NotNull(agreebutton);
-        }
-
-        [Fact]
-        public void AgreeButton_IsEnabled_WhenCheckboxIsChecked()
-        {
-            //var component = RenderComponent<Authentication>();
-            //var input = component.FindComponent<MudCheckBox<bool>>().Find("input[type='checkbox']");
-            //input.Change(true);
-            //finding agree button and making sure it is enabled
-            //var agreeButton = component.FindComponents<MudButton>().FirstOrDefault(x => x.Markup.Contains("eularead_ua"));
-            //Assert.NotNull(agreeButton);
-            //Assert.False(agreeButton.Instance.Disabled);
-            Assert.True(true);
-        }
-
-        [Fact]
-        public void AgreeButton_IsDisplayed_ButDisabledByDefault()
-        {
-
-
-            //var service = Manager.Instance.ServiceProvider.GetService<IStringLocalizer>();
-            //service.load
-
-            // Arrange
-            //var component = RenderComponent<Authentication>();
-            //var checkbox = component.FindComponent<MudCheckBox<bool>>();
-            //var box1 = checkbox.Instance;
-            //var input = chechkbox.Find("input");
-            //box.Checked.ShouldBeTrue();
-            Assert.True(true);
-        }
-
-
-        //[Fact]
-        //public void Checkbox_TogglesCheckedStateOnButtonClick()
-        //{
-        //    var checkbox = RenderComponent<MudCheckBox<bool>>();
-        //    var input = checkbox.Find("input");
-
-        //    // Assert
-        //    Assert.False(checkbox.Instance.Checked);
-
-        //    // Act
-        //    input.Change(true);
-
-        //    // Assert
-        //    Assert.True(checkbox.Instance.Checked);
-
-        //    // Act
-        //    input.Change(false);
-
-        //    // Assert
-        //    Assert.False(checkbox.Instance.Checked);
-        //    Assert.True(true);
-        //}
-
-        //WelcomePage
-        [Fact]
-        public void Test_HeaderText_Display()
-        {
-            var component = RenderComponent<MudText>(parameters => parameters
-                .Add(p => p.Typo, Typo.h6)
-                .AddChildContent("Welcome to the Össur Logic app!")
-            );
-
-            var header = component.Find("h6");
-            Assert.NotNull(header);
-            Assert.Equal("Welcome to the Össur Logic app!", header.InnerHtml);
-        }
-
-        [Fact]
-        public void Welcome_LogoVisible()
-        {
-            var component = RenderComponent<Authentication>();
-            var ossurIcon = component.FindComponent<MudImage>();
-            Assert.NotNull(ossurIcon);
-            Assert.Contains("/images/logo.png", ossurIcon.Instance.Src);
-            var altText = ossurIcon.Instance.GetType().GetProperty("Alt")?.GetValue(ossurIcon.Instance);
-            Assert.Equal("Ossur Icon", altText);
-
-        }
-
-        [Fact]
-        public void InstructionTextDisplayTest()
-        {
-            var component = RenderComponent<MudText>(parameters => parameters
-                .Add(p => p.Typo, Typo.body1)
-                .Add(p => p.Class, "instruction-text")
-                .AddChildContent("Instructions how to start, how to connect to a device. Voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem.")
-            );
-
-            var instructionText = component.Find(".instruction-text");
-            //var instruction = component.Find("span");
-            //var instructionText = component.Find("div.instruction-text").ComponentRoot.InnerText;
-
-            Assert.NotNull(instructionText);
-            Assert.Equal("Instructions how to start, how to connect to a device. Voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem.", instructionText.InnerHtml);
-        }
-
-        [Fact]
-        public void AdddeviceDisplayTest()
-        {
-            var comp = RenderComponent<MudButton>(parameters => parameters
-            .Add(p => p.Variant, Variant.Filled)
-            .Add(p => p.Class, "ml-auto")
-            .AddChildContent("Add a device")
-            );
-
-            var button = comp.Find(".ml-auto");
-            Assert.NotNull(button);
-            Assert.Equal("Add a device", button.TextContent);
-        }
-
-        [Fact]
-        public void UserGuide_Textdisplay()
-        {
-            var expectedtext = "User Guide";
-            var component = RenderComponent<MudLink>(parameters => parameters
-            .AddChildContent(expectedtext));
-            var linkText = component.Find("a").TextContent;
-            Assert.Equal(expectedtext, linkText);
-
-        }
-
-        [Fact]
-        public void UserGuide_Arrowvisibility()
-        {
-            var component = RenderComponent<MudIcon>(parameters => parameters
-            .Add(p => p.Class, "user-guide-icon")
-            .Add(p => p.Size, Size.Small)
-            .Add(p => p.Icon, Icons.Material.Filled.ArrowForwardIos)
-            );
-
-            var icon = component.Find(".user-guide-icon");
-            Assert.NotNull(icon);
-        }
-
-
-        [Fact]
-        public void AddDeviceButton_ChangesTextBasedOnDevices()
-        {
-            //ToDo - have
-            //var component = RenderComponent<Authentication>();
-            //var button = component.FindComponent<MudButton>();
-            //var hasDevices = component.Instance.HasKnownDevices();
-            //var buttonText = button.TextContent;
-
-            //if (hasDevices)
-            //{
-            //    Assert.Equal("yourdevices_ua", buttonText);
-            //}
-            //else
-            //{
-            //    Assert.Equal("add_device_ua", buttonText);
-            //}
-            Assert.True(true);
-        }
-
-        //[Fact]
-        //public void AddDeviceButton_TextChangesBasedOnDevices()
-        //{
-        //    // Arrange
-        //    var component = RenderComponent<Authentication>();
-
-        //    // Act
-        //    var button = component.FindComponent<MudButton>();
-        //    var buttonText = button.Instance.InnerHtml;
-
-        //    // Assert
-        //    if (HasKnownDevices())
-        //    {
-        //        Assert.Equal("yourdevices_ua", buttonText.Trim());
-        //    }
-        //    else
-        //    {
-        //        Assert.Equal("add_device_ua", buttonText.Trim());
-        //    }
-
-        //    // Act
-        //    button.Instance.OnClick.InvokeAsync(null);
-
-        //    // Assert
-        //    var buttonText = button.Instance.ChildContent.ToString();
-        //    if (HasKnownDevices())
-        //    {
-        //        Assert.Equal("yourdevices_ua", buttonText);
-        //    }
-        //    else
-        //    {
-        //        Assert.Equal("add_device_ua", buttonText);
-        //    }
-        //}
-
         [Fact]
         public void UserGuideLink_NavigationTest()
         {
@@ -693,8 +388,312 @@ namespace BionicAppTestRunner.BionicAppUi
         //    Assert.Equal(expectedUrl, navigationManager.Uri);
         //}
 
+        [Fact]
+        public async void Test_PaperEula()
+        {
+            var service1 = Services.GetService<UserAppDbContext>();
+            await Manager.Instance.Login("https://bionicregistry40dev.azurewebsites.net/api/v1", "tst_admin@example.com", "tst_admin_42");
+            //var user = !Helper.CheckExistingUser(service1);
+            Preferences.Set("isEulaAgreed", false);
 
 
+            var component = RenderComponent<Authentication>();
+            var mudpaper = component.FindComponent<MudPaper>();
+            Assert.NotNull(mudpaper);
+            Assert.Equal("ma-8", mudpaper.Instance.Class);
+            Assert.Equal(0, mudpaper.Instance.Elevation);
+        }
+
+        [Fact]
+        public async void Test_Eula()
+        {
+            var service1 = Services.GetService<UserAppDbContext>();
+            await Manager.Instance.Login("https://bionicregistry40dev.azurewebsites.net/api/v1", "tst_admin@example.com", "tst_admin_42");
+            Preferences.Set("isEulaAgreed", false);
+
+            var component = RenderComponent<Authentication>();
+            var mudpaper = component.FindComponent<MudPaper>();
+            var stack = mudpaper.FindComponent<MudStack>();
+            var card = stack.FindComponent<MudCard>();
+            var cardcontent = card.FindComponent<MudCardContent>();
+
+            Assert.NotNull(card);
+            Assert.NotNull(cardcontent);
+            Assert.NotNull(stack);
+            Assert.Equal(2, stack.Instance.Spacing);
+            Assert.Equal("height:75vh; overflow:scroll;", card.Instance.Style);
+            Assert.Equal(0, card.Instance.Elevation);
+            Assert.True(card.Instance.Square);
+            Assert.True(card.Instance.Outlined);
+            //cardcontent.MarkupMatches("<div class=\"mud-card-content\"><div class=\"d-flex flex-column\"></div></div>");
+        }
+
+        [Fact]
+        public async void Test_CheckboxProperties()
+        {
+            var service1 = Services.GetService<UserAppDbContext>();
+            await Manager.Instance.Login("https://bionicregistry40dev.azurewebsites.net/api/v1", "tst_admin@example.com", "tst_admin_42");
+            Preferences.Set("isEulaAgreed", false);
+
+            const string key = "TranslationCutoffDate";
+
+            var cutoff = Manager.Instance.GetValue(key, DateTime.MinValue);
+            await Manager.Instance.CloudSync.PullTranslationsFromCloud(cutoff, 1, 1000, "en", "USERAPP_V1.0");
+            CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("en");
+
+            var component = RenderComponent<Authentication>();
+            var mudpaper = component.FindComponent<MudPaper>();
+            var checkbox = mudpaper.FindComponent<MudCheckBox<bool>>();
+
+            Assert.NotNull(checkbox);
+            Assert.Equal(Color.Primary, checkbox.Instance.Color);
+            checkbox.Find("p").MarkupMatches("<p class=\"mud-typography mud-typography-body1\">I have read the terms and conditions</p>");
+            Assert.Equal(LabelPosition.End, checkbox.Instance.LabelPosition);
+            Assert.Equal(Size.Medium, checkbox.Instance.Size);
+            Assert.False(checkbox.Instance.Checked);
+
+        }
+
+        [Fact]
+        public async void Test_AgreeButtonProp()
+        {
+            var service1 = Services.GetService<UserAppDbContext>();
+            await Manager.Instance.Login("https://bionicregistry40dev.azurewebsites.net/api/v1", "tst_admin@example.com", "tst_admin_42");
+
+            Preferences.Set("isEulaAgreed", false);
+
+            const string key = "TranslationCutoffDate";
+            var cutoff = Manager.Instance.GetValue(key, DateTime.MinValue);
+            await Manager.Instance.CloudSync.PullTranslationsFromCloud(cutoff, 1, 1000, "en", "USERAPP_V1.0");
+            CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("en");
+
+            var component = RenderComponent<Authentication>();
+            var mudpaper = component.FindComponent<MudPaper>();
+            var button = mudpaper.FindComponent<MudButton>();
+
+            Assert.NotNull(button);
+            Assert.Equal("height:52px;text-transform:none;", button.Instance.Style);
+            Assert.Equal(Color.Primary, button.Instance.Color);
+            Assert.True(button.Instance.FullWidth);
+            Assert.Equal(Variant.Filled, button.Instance.Variant);
+            Assert.False(button.Instance.DisableElevation);
+            Assert.True(button.Instance.Disabled);
+            button.Find("span").MarkupMatches("<span class=\"mud-button-label\">Agree</span>");
+            Assert.Equal(Size.Medium, button.Instance.Size);
+        }
+
+        [Fact]
+        public async void Test_CheckboxToggle()
+        {
+            var service1 = Services.GetService<UserAppDbContext>();
+            await Manager.Instance.Login("https://bionicregistry40dev.azurewebsites.net/api/v1", "tst_admin@example.com", "tst_admin_42");
+            Preferences.Set("isEulaAgreed", false);
+
+            var component = RenderComponent<Authentication>();
+            var mudpaper = component.FindComponent<MudPaper>();
+            var checkbox = mudpaper.FindComponent<MudCheckBox<bool>>();
+            var button = mudpaper.FindComponent<MudButton>();
+
+            var input = checkbox.Find("input");
+            Assert.False(checkbox.Instance.Checked);
+            Assert.True(button.Instance.Disabled);
+
+            input.Change(true);
+            Assert.True(checkbox.Instance.Checked);
+            Assert.False(button.Instance.Disabled);
+
+            input.Change(false);
+            Assert.False(checkbox.Instance.Checked);
+            Assert.True(button.Instance.Disabled);
+        }
+
+        [Fact]
+        public async void AgreeButton_IsEnabled_WhenCheckboxIsChecked()
+        {
+            var service1 = Services.GetService<UserAppDbContext>();
+            await Manager.Instance.Login("https://bionicregistry40dev.azurewebsites.net/api/v1", "tst_admin@example.com", "tst_admin_42");
+            Preferences.Set("isEulaAgreed", false);
+
+            var component = RenderComponent<Authentication>();
+            var mudpaper = component.FindComponent<MudPaper>();
+            var checkbox = mudpaper.FindComponent<MudCheckBox<bool>>();
+
+            var input = checkbox.Find("input");
+            Assert.False(checkbox.Instance.Checked);
+        }
+
+        [Fact]
+        public async void Test_WelcomeTextProp()
+        {
+            var service1 = Services.GetService<UserAppDbContext>();
+            Preferences.Set("isEulaAgreed", true);
+            await Manager.Instance.Login("https://bionicregistry40dev.azurewebsites.net/api/v1", "tst_admin@example.com", "tst_admin_42");
+
+            const string key = "TranslationCutoffDate";
+            var cutoff = Manager.Instance.GetValue(key, DateTime.MinValue);
+            await Manager.Instance.CloudSync.PullTranslationsFromCloud(cutoff, 1, 1000, "en", "USERAPP_V1.0");
+            CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("en");
+
+            var comp = RenderComponent<Authentication>();
+            var stack = comp.FindComponents<MudStack>()[0];
+            var paper = stack.FindComponents<MudPaper>()[0];
+            var text = paper.FindComponent<MudText>();
+
+            Assert.NotNull(stack);
+            Assert.NotNull(paper);
+            Assert.NotNull(text);
+            Assert.Equal("pa-8", stack.Instance.Class);
+            Assert.Equal(0, paper.Instance.Elevation);
+            Assert.Equal(Typo.h6, text.Instance.Typo);
+            text.Find("h6").MarkupMatches("<h6 class=\"mud-typography mud-typography-h6\">Welcome to the Össur Logic app! </h6>");
+
+        }
+
+        [Fact]
+        public async void Test_ImageDisplay()
+        {
+            var service1 = Services.GetService<UserAppDbContext>();
+            Preferences.Set("isEulaAgreed", true);
+            await Manager.Instance.Login("https://bionicregistry40dev.azurewebsites.net/api/v1", "tst_admin@example.com", "tst_admin_42");
+
+            var comp = RenderComponent<Authentication>();
+            var stack = comp.FindComponents<MudStack>()[0];
+            var paper = stack.FindComponents<MudPaper>()[1];
+            var image = paper.FindComponent<MudImage>();
+
+            Assert.NotNull(stack);
+            Assert.NotNull(paper);
+            Assert.True(paper.Instance.Outlined);
+            Assert.True(paper.Instance.Square);
+            Assert.NotNull(image);
+            Assert.Equal("/images/logo.png", image.Instance.Src);
+            Assert.Equal("Ossur Icon", image.Instance.Alt);
+            Assert.True(image.Instance.Fluid);
+            Assert.Equal(0, paper.Instance.Elevation);
+        }
+
+        [Fact]
+        public async void Test_InstrcnTextProp()
+        {
+            var service1 = Services.GetService<UserAppDbContext>();
+            Preferences.Set("isEulaAgreed", true);
+            await Manager.Instance.Login("https://bionicregistry40dev.azurewebsites.net/api/v1", "tst_admin@example.com", "tst_admin_42");
+
+            const string key = "TranslationCutoffDate";
+            var cutoff = Manager.Instance.GetValue(key, DateTime.MinValue);
+            await Manager.Instance.CloudSync.PullTranslationsFromCloud(cutoff, 1, 1000, "en", "USERAPP_V1.0");
+            CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("en");
+
+            var comp = RenderComponent<Authentication>();
+            var stack = comp.FindComponents<MudStack>()[0];
+            var paper = comp.FindComponents<MudPaper>()[2];
+            var text = paper.FindComponent<MudText>();
+
+            Assert.NotNull(stack);
+            Assert.NotNull(paper);
+            Assert.NotNull(text);
+            Assert.Equal("pa-8", stack.Instance.Class);
+            Assert.Equal(0, paper.Instance.Elevation);
+            Assert.Equal(Typo.body1, text.Instance.Typo);
+            Assert.Equal("instruction-text", text.Instance.Class);
+            text.MarkupMatches("<p class=\"mud-typography mud-typography-body1 instruction-text\">Instructions how to start, how to connect to a device. Voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem.</p>");
+
+        }
+
+        [Fact]
+        public async void Userguide_Prop()
+        {
+            var service1 = Services.GetService<UserAppDbContext>();
+            Preferences.Set("isEulaAgreed", true);
+            await Manager.Instance.Login("https://bionicregistry40dev.azurewebsites.net/api/v1", "tst_admin@example.com", "tst_admin_42");
+
+            const string key = "TranslationCutoffDate";
+            var cutoff = Manager.Instance.GetValue(key, DateTime.MinValue);
+            await Manager.Instance.CloudSync.PullTranslationsFromCloud(cutoff, 1, 1000, "en", "USERAPP_V1.0");
+            CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("en");
+
+            var comp = RenderComponent<Authentication>();
+            var stack = comp.FindComponents<MudStack>()[1];
+            var link = stack.FindComponent<MudLink>();
+            var icon = link.FindComponent<MudIcon>();
+
+            Assert.NotNull(stack);
+            Assert.Equal("mt-2", stack.Instance.Class);
+            Assert.Equal(AlignItems.Center, stack.Instance.AlignItems);
+
+            Assert.NotNull(link);
+            Assert.Equal("https://bionic.blob.core.windows.net/public/IFU/RHEO_Knee_3_IFU_EN.pdf", link.Instance.Href);
+            link.Find("a").MarkupMatches("<a href=\"https://bionic.blob.core.windows.net/public/IFU/RHEO_Knee_3_IFU_EN.pdf\" blazor:onclick=\"1\" class=\"mud-typography mud-link mud-primary-text mud-link-underline-hover mud-typography-body1\">User Guide\r\n                    <svg class=\"mud-icon-root mud-svg-icon mud-icon-size-small user-guide-icon\" focusable=\"false\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><g><path d=\"M0,0h24v24H0V0z\" fill=\"none\"/></g><g><polygon points=\"6.23,20.23 8,22 18,12 8,2 6.23,3.77 14.46,12\"/></g></svg></a>");
+
+            Assert.NotNull(icon);
+            Assert.Equal(Size.Small, icon.Instance.Size);
+            Assert.Equal("user-guide-icon", icon.Instance.Class);
+            Assert.Equal(Icons.Material.Filled.ArrowForwardIos, icon.Instance.Icon);
+        }
+
+        [Fact]
+        public async void Adddevice_display()
+        {
+            var service1 = Services.GetService<UserAppDbContext>();
+            Preferences.Set("isEulaAgreed", true);
+            await Manager.Instance.Login("https://bionicregistry40dev.azurewebsites.net/api/v1", "tst_admin@example.com", "tst_admin_42");
+
+            const string key = "TranslationCutoffDate";
+            var cutoff = Manager.Instance.GetValue(key, DateTime.MinValue);
+            await Manager.Instance.CloudSync.PullTranslationsFromCloud(cutoff, 1, 1000, "en", "USERAPP_V1.0");
+            CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("en");
+
+            var comp = RenderComponent<Authentication>();
+            var stack = comp.FindComponents<MudStack>()[2];
+            var button = stack.FindComponent<MudButton>();
+
+            Assert.NotNull(stack);
+            Assert.Equal("mt-3", stack.Instance.Class);
+            Assert.Equal(Justify.FlexStart, stack.Instance.Justify);
+            Assert.NotNull(button);
+            Assert.Equal("height:52px; text-transform:none;", button.Instance.Style);
+            Assert.Equal(Variant.Filled, button.Instance.Variant);
+            Assert.True(button.Instance.FullWidth);
+            Assert.Equal(Color.Primary, button.Instance.Color);
+            Assert.Equal("ml-auto", button.Instance.Class);
+            button.Find("span").MarkupMatches("<span class=\"mud-button-label\">Add a device</span>");
+
+            //button.Instance.OnClick.InvokeAsync(null);
+
+            //var buttonText = button.Instance.ChildContent.ToString();
+            //if (HasKnownDevices())
+            //{
+            //    Assert.Equal("yourdevices_ua", buttonText);
+            //}
+            //else
+            //{
+            //    Assert.Equal("add_device_ua", buttonText);
+            //}
+
+        }
+
+        //[Fact]
+        //public async void Test_Ifcondn()
+        //{
+        //    mydevicemethod();
+        //    var service1 = Services.GetService<UserAppDbContext>();
+        //    Preferences.Set("isEulaAgreed", true);
+        //    await Manager.Instance.Login("https://bionicregistry40dev.azurewebsites.net/api/v1", "tst_admin@example.com", "tst_admin_42");
+
+        //    const string key = "TranslationCutoffDate";
+        //    var cutoff = Manager.Instance.GetValue(key, DateTime.MinValue);
+        //    await Manager.Instance.CloudSync.PullTranslationsFromCloud(cutoff, 1, 1000, "en", "USERAPP_V1.0");
+        //    CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("en");
+
+        //    var comp = RenderComponent<Authentication>();
+        //    var stack = comp.FindComponents<MudStack>()[2];
+        //    var button = stack.FindComponent<MudButton>();
+
+        //    Assert.NotNull(button);
+        //    button.Find("span").MarkupMatches("<span class=\"mud-button-label\">Add a device</span>");
+        //}
 
     }
+
+
 }
